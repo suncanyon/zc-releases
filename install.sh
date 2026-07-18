@@ -1,14 +1,14 @@
 #!/usr/bin/env sh
-# ZeroClaw CLI installer
+# Picobot CLI installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/suncanyon/zc-releases/main/install.sh | sh
 #
-# Installs the `zeroclaw` binary to /usr/local/bin (or ~/bin if not writable).
+# Installs the `pb` binary to /usr/local/bin (or ~/bin if not writable).
 
 set -eu
 
 REPO="suncanyon/zc-releases"
 INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="zeroclaw"
+BINARY_NAME="pb"
 TMPDIR="${TMPDIR:-/tmp}"
 
 # ---------------------------------------------------------------------------
@@ -82,16 +82,16 @@ download() {
 # ---------------------------------------------------------------------------
 
 TARGET=$(detect_target)
-VERSION="${ZC_VERSION:-$(latest_version)}"
+VERSION="${PB_VERSION:-$(latest_version)}"
 VERSION_NUM="${VERSION#v}"
 
-ARCHIVE="zeroclaw-${VERSION_NUM}-${TARGET}.tar.gz"
+ARCHIVE="pb-${VERSION_NUM}-${TARGET}.tar.gz"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${ARCHIVE}"
 
-TMP_DIR=$(mktemp -d "${TMPDIR}/zeroclaw-install.XXXXXX")
+TMP_DIR=$(mktemp -d "${TMPDIR}/picobot-install.XXXXXX")
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-echo "Installing zeroclaw ${VERSION} (${TARGET})..."
+echo "Installing picobot ${VERSION} (${TARGET})..."
 
 # Download archive
 download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}"
@@ -153,7 +153,7 @@ else
 fi
 
 echo ""
-echo "zeroclaw ${VERSION} installed to ${INSTALLED_TO}"
+echo "picobot ${VERSION} installed to ${INSTALLED_TO}"
 echo ""
 echo "Get started:"
-echo "  zeroclaw --help"
+echo "  pb --help"
