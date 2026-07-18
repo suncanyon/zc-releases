@@ -1,6 +1,6 @@
 # zc-releases
 
-Public binary releases for [ZeroClaw CLI](https://github.com/suncanyon/zc).
+Public binary releases for [Picobot CLI](https://github.com/suncanyon/zc).
 
 ## Install
 
