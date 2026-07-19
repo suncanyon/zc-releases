@@ -49,22 +49,42 @@ detect_target() {
 }
 
 # ---------------------------------------------------------------------------
-# Fetch latest version tag from GitHub
+# Fetch latest version tag from GitHub (includes prereleases)
 # ---------------------------------------------------------------------------
 
 latest_version() {
+    # Try /releases/latest first (stable), fall back to first entry in /releases
+    TAG=""
     if command -v curl >/dev/null 2>&1; then
-        curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+        TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
             | grep '"tag_name"' \
-            | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/'
+            | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/' || true)
+        if [ -z "$TAG" ]; then
+            TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases?per_page=1" \
+                | grep '"tag_name"' \
+                | head -1 \
+                | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
+        fi
     elif command -v wget >/dev/null 2>&1; then
-        wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" \
+        TAG=$(wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
             | grep '"tag_name"' \
-            | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/'
+            | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/' || true)
+        if [ -z "$TAG" ]; then
+            TAG=$(wget -qO- "https://api.github.com/repos/${REPO}/releases?per_page=1" \
+                | grep '"tag_name"' \
+                | head -1 \
+                | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
+        fi
     else
         echo "curl or wget is required" >&2
         exit 1
     fi
+
+    if [ -z "$TAG" ]; then
+        echo "Could not determine latest version" >&2
+        exit 1
+    fi
+    echo "$TAG"
 }
 
 download() {
