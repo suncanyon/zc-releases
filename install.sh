@@ -2,13 +2,12 @@
 # Picobot CLI installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/suncanyon/zc-releases/main/install.sh | sh
 #
-# Installs the `pb` binary to /usr/local/bin (or ~/bin if not writable).
+# Installs the `pb` and `pbcode` binaries to /usr/local/bin (or ~/bin if not writable).
 
 set -eu
 
 REPO="suncanyon/zc-releases"
 INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="pb"
 TMPDIR="${TMPDIR:-/tmp}"
 
 # ---------------------------------------------------------------------------
@@ -53,7 +52,6 @@ detect_target() {
 # ---------------------------------------------------------------------------
 
 latest_version() {
-    # Try /releases/latest first (stable), fall back to first entry in /releases
     TAG=""
     if command -v curl >/dev/null 2>&1; then
         TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
@@ -143,30 +141,34 @@ tar -xzf "${TMP_DIR}/${ARCHIVE}" -C "${TMP_DIR}"
 
 # Install — unlink first so upgrades are safe even if the binary is running.
 install_binary() {
-    TARGET_DIR="$1"
-    USE_SUDO="$2"
+    BINARY="$1"
+    TARGET_DIR="$2"
+    USE_SUDO="$3"
 
     if [ "$USE_SUDO" = "yes" ]; then
-        sudo rm -f "${TARGET_DIR}/${BINARY_NAME}"
-        sudo cp "${TMP_DIR}/${BINARY_NAME}" "${TARGET_DIR}/${BINARY_NAME}"
-        sudo chmod +x "${TARGET_DIR}/${BINARY_NAME}"
+        sudo rm -f "${TARGET_DIR}/${BINARY}"
+        sudo cp "${TMP_DIR}/${BINARY}" "${TARGET_DIR}/${BINARY}"
+        sudo chmod +x "${TARGET_DIR}/${BINARY}"
     else
-        rm -f "${TARGET_DIR}/${BINARY_NAME}"
-        cp "${TMP_DIR}/${BINARY_NAME}" "${TARGET_DIR}/${BINARY_NAME}"
-        chmod +x "${TARGET_DIR}/${BINARY_NAME}"
+        rm -f "${TARGET_DIR}/${BINARY}"
+        cp "${TMP_DIR}/${BINARY}" "${TARGET_DIR}/${BINARY}"
+        chmod +x "${TARGET_DIR}/${BINARY}"
     fi
 }
 
 if [ -w "$INSTALL_DIR" ]; then
-    install_binary "$INSTALL_DIR" no
-    INSTALLED_TO="${INSTALL_DIR}/${BINARY_NAME}"
+    install_binary "pb" "$INSTALL_DIR" no
+    install_binary "pbcode" "$INSTALL_DIR" no
+    INSTALLED_TO="$INSTALL_DIR"
 elif command -v sudo >/dev/null 2>&1; then
-    install_binary "$INSTALL_DIR" yes
-    INSTALLED_TO="${INSTALL_DIR}/${BINARY_NAME}"
+    install_binary "pb" "$INSTALL_DIR" yes
+    install_binary "pbcode" "$INSTALL_DIR" yes
+    INSTALLED_TO="$INSTALL_DIR"
 else
     mkdir -p "$HOME/bin"
-    install_binary "$HOME/bin" no
-    INSTALLED_TO="$HOME/bin/${BINARY_NAME}"
+    install_binary "pb" "$HOME/bin" no
+    install_binary "pbcode" "$HOME/bin" no
+    INSTALLED_TO="$HOME/bin"
     echo ""
     echo "Installed to ~/bin — make sure ~/bin is in your PATH:"
     echo '  export PATH="$HOME/bin:$PATH"'
@@ -174,6 +176,9 @@ fi
 
 echo ""
 echo "picobot ${VERSION} installed to ${INSTALLED_TO}"
+echo "  pb      — CLI agent"
+echo "  pbcode  — interactive TUI"
 echo ""
 echo "Get started:"
 echo "  pb --help"
+echo "  pbcode"
