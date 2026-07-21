@@ -114,7 +114,9 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 echo "Installing picobots ${VERSION} (${TARGET})..."
 
 # Download archive (try new name first, fall back to legacy)
-if ! download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}" 2>/dev/null; then
+if download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}" 2>/dev/null; then
+    :
+else
     ARCHIVE="$ARCHIVE_LEGACY"
     DOWNLOAD_URL="$DOWNLOAD_URL_LEGACY"
     download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}"
