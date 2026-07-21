@@ -103,7 +103,7 @@ TARGET=$(detect_target)
 VERSION="${PB_VERSION:-$(latest_version)}"
 VERSION_NUM="${VERSION#v}"
 
-ARCHIVE="pb-${VERSION_NUM}-${TARGET}.tar.gz"
+ARCHIVE="picobots-${VERSION_NUM}-${TARGET}.tar.gz"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${ARCHIVE}"
 
 TMP_DIR=$(mktemp -d "${TMPDIR}/picobots-install.XXXXXX")
@@ -158,7 +158,8 @@ else
     INSTALLED_TO="$INSTALL_DIR"
 fi
 
-install_binary "pb" "$INSTALLED_TO"
+install_binary "picobots" "$INSTALLED_TO"
+ln -sf "${INSTALLED_TO}/picobots" "${INSTALLED_TO}/pb"
 install_binary "pbcode" "$INSTALLED_TO"
 
 case ":$PATH:" in
@@ -172,9 +173,10 @@ esac
 
 echo ""
 echo "picobots ${VERSION} installed to ${INSTALLED_TO}"
-echo "  pb      — CLI agent"
-echo "  pbcode  — interactive TUI"
+echo "  picobots — CLI agent"
+echo "  pb       — alias for picobots"
+echo "  pbcode   — interactive TUI"
 echo ""
 echo "Get started:"
-echo "  pb --help"
+echo "  picobots --help"
 echo "  pbcode"
