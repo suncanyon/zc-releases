@@ -104,15 +104,21 @@ VERSION="${PB_VERSION:-$(latest_version)}"
 VERSION_NUM="${VERSION#v}"
 
 ARCHIVE="picobots-${VERSION_NUM}-${TARGET}.tar.gz"
+ARCHIVE_LEGACY="pb-${VERSION_NUM}-${TARGET}.tar.gz"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${ARCHIVE}"
+DOWNLOAD_URL_LEGACY="https://github.com/${REPO}/releases/download/${VERSION}/${ARCHIVE_LEGACY}"
 
 TMP_DIR=$(mktemp -d "${TMPDIR}/picobots-install.XXXXXX")
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 echo "Installing picobots ${VERSION} (${TARGET})..."
 
-# Download archive
-download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}"
+# Download archive (try new name first, fall back to legacy)
+if ! download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}" 2>/dev/null; then
+    ARCHIVE="$ARCHIVE_LEGACY"
+    DOWNLOAD_URL="$DOWNLOAD_URL_LEGACY"
+    download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}"
+fi
 
 # Verify checksum if sha256sum / shasum available
 SHA_URL="${DOWNLOAD_URL}.sha256"
@@ -158,8 +164,14 @@ else
     INSTALLED_TO="$INSTALL_DIR"
 fi
 
-install_binary "picobots" "$INSTALLED_TO"
-ln -sf "${INSTALLED_TO}/picobots" "${INSTALLED_TO}/pb"
+if [ -f "${TMP_DIR}/picobots" ]; then
+    install_binary "picobots" "$INSTALLED_TO"
+    ln -sf "${INSTALLED_TO}/picobots" "${INSTALLED_TO}/pb"
+elif [ -f "${TMP_DIR}/pb" ]; then
+    cp "${TMP_DIR}/pb" "${TMP_DIR}/picobots"
+    install_binary "picobots" "$INSTALLED_TO"
+    ln -sf "${INSTALLED_TO}/picobots" "${INSTALLED_TO}/pb"
+fi
 install_binary "pbcode" "$INSTALLED_TO"
 
 case ":$PATH:" in
