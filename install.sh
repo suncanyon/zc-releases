@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
-# Picobot CLI installer
+# Picobots CLI installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/suncanyon/zc-releases/main/install.sh | sh
 #
-# Installs the `pb` and `pbcode` binaries to /usr/local/bin (or ~/bin if not writable).
+# Installs the `pb` and `pbcode` binaries to ~/.local/bin (or /usr/local/bin if writable).
 
 set -eu
 
 REPO="suncanyon/zc-releases"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${HOME}/.local/bin"
 TMPDIR="${TMPDIR:-/tmp}"
 
 # ---------------------------------------------------------------------------
@@ -106,10 +106,10 @@ VERSION_NUM="${VERSION#v}"
 ARCHIVE="pb-${VERSION_NUM}-${TARGET}.tar.gz"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${ARCHIVE}"
 
-TMP_DIR=$(mktemp -d "${TMPDIR}/picobot-install.XXXXXX")
+TMP_DIR=$(mktemp -d "${TMPDIR}/picobots-install.XXXXXX")
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-echo "Installing picobot ${VERSION} (${TARGET})..."
+echo "Installing picobots ${VERSION} (${TARGET})..."
 
 # Download archive
 download "$DOWNLOAD_URL" "${TMP_DIR}/${ARCHIVE}"
@@ -143,39 +143,35 @@ tar -xzf "${TMP_DIR}/${ARCHIVE}" -C "${TMP_DIR}"
 install_binary() {
     BINARY="$1"
     TARGET_DIR="$2"
-    USE_SUDO="$3"
 
-    if [ "$USE_SUDO" = "yes" ]; then
-        sudo rm -f "${TARGET_DIR}/${BINARY}"
-        sudo cp "${TMP_DIR}/${BINARY}" "${TARGET_DIR}/${BINARY}"
-        sudo chmod +x "${TARGET_DIR}/${BINARY}"
-    else
-        rm -f "${TARGET_DIR}/${BINARY}"
-        cp "${TMP_DIR}/${BINARY}" "${TARGET_DIR}/${BINARY}"
-        chmod +x "${TARGET_DIR}/${BINARY}"
-    fi
+    rm -f "${TARGET_DIR}/${BINARY}"
+    cp "${TMP_DIR}/${BINARY}" "${TARGET_DIR}/${BINARY}"
+    chmod +x "${TARGET_DIR}/${BINARY}"
 }
 
+mkdir -p "$INSTALL_DIR"
 if [ -w "$INSTALL_DIR" ]; then
-    install_binary "pb" "$INSTALL_DIR" no
-    install_binary "pbcode" "$INSTALL_DIR" no
-    INSTALLED_TO="$INSTALL_DIR"
-elif command -v sudo >/dev/null 2>&1; then
-    install_binary "pb" "$INSTALL_DIR" yes
-    install_binary "pbcode" "$INSTALL_DIR" yes
     INSTALLED_TO="$INSTALL_DIR"
 else
-    mkdir -p "$HOME/bin"
-    install_binary "pb" "$HOME/bin" no
-    install_binary "pbcode" "$HOME/bin" no
-    INSTALLED_TO="$HOME/bin"
-    echo ""
-    echo "Installed to ~/bin — make sure ~/bin is in your PATH:"
-    echo '  export PATH="$HOME/bin:$PATH"'
+    INSTALL_DIR="${HOME}/bin"
+    mkdir -p "$INSTALL_DIR"
+    INSTALLED_TO="$INSTALL_DIR"
 fi
 
+install_binary "pb" "$INSTALLED_TO"
+install_binary "pbcode" "$INSTALLED_TO"
+
+case ":$PATH:" in
+    *":${INSTALLED_TO}:"*) ;;
+    *)
+        echo ""
+        echo "Add ${INSTALLED_TO} to your PATH:"
+        echo "  export PATH=\"${INSTALLED_TO}:\$PATH\""
+        ;;
+esac
+
 echo ""
-echo "picobot ${VERSION} installed to ${INSTALLED_TO}"
+echo "picobots ${VERSION} installed to ${INSTALLED_TO}"
 echo "  pb      — CLI agent"
 echo "  pbcode  — interactive TUI"
 echo ""
